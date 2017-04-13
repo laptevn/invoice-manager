@@ -3,16 +3,17 @@ package com.invoice.bank;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import java.math.BigDecimal;
 import java.util.List;
 
 @Component
 public class PaymentProvider {
-    private final Client client;
     private final Logger logger = LoggerFactory.getLogger(PaymentProvider.class);
+    private final Client client;
+    private final PaymentConverter paymentConverter;
 
-    public PaymentProvider(Client client) {
+    public PaymentProvider(Client client, PaymentConverter paymentConverter) {
         this.client = client;
+        this.paymentConverter = paymentConverter;
     }
 
     public String loadPayment(String accountId, String token, String fromDate) {
@@ -24,12 +25,8 @@ public class PaymentProvider {
             throw new IllegalStateException("Bank didn't return payment information");
         }
 
-        String result = new BigDecimal(operations.get(0).getAmount())
-                .setScale(2, BigDecimal.ROUND_DOWN)
-                .stripTrailingZeros()
-                .toPlainString();
+        String result = paymentConverter.convert(operations.get(0).getAmount());
         logger.info("Loaded {} payment", result);
-
         return result;
     }
 }
